@@ -1,0 +1,1 @@
+import {sqliteTable,text} from "drizzle-orm/sqlite-core";export const receipts=sqliteTable("receipts",{id:text("id").primaryKey(),status:text("status").notNull(),createdAt:text("created_at").notNull(),message:text("message").notNull()});
