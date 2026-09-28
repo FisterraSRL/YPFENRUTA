@@ -1,5 +1,73 @@
-export type SourceRow={row:number;date:string;card:string;plate:string;sap:string;invoice:string;quantity:number;price:number;net:number;product:string;businessName?:string;errors:string[]};
+export type SourceRow={
+  row:number;
+  date:string;
+  time:string;
+  sourceHash:string;
+  card:string;
+  plate:string;
+  sap:string;
+  invoice:string;
+  quantity:number;
+  price:number;
+  net:number;
+  product:string;
+  businessName?:string;
+  errors:string[];
+};
+
 export const round=(n:number,d:number)=>Math.round((n+Number.EPSILON)*10**d)/10**d;
-export function identifier(r:SourceRow){return r.date+"_"+r.card+"_PATENTE"+r.plate;}
-export function validate(r:SourceRow){const e:string[]=[];if(!r||typeof r!=="object")return ["Fila inválida"];if(!Number.isInteger(r.row)||r.row<2)e.push("Fila inválida");if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||!Number.isFinite(Date.parse(r.date))||new Date(r.date).toISOString().slice(0,10)!==r.date)e.push("Fecha inválida");for(const [k,label]of [["card","TARJETA"],["plate","PATENTE"],["sap","N° SAP"],["invoice","NRO.FACTURA"]] as const){if(typeof r[k]!=="string"||!r[k].trim()||r[k].length>120)e.push(label+" requerido o inválido");}if(!/^\d+$/.test(r.card))e.push("La tarjeta debe conservarse como texto numérico");for(const [k,label]of [["quantity","CANTIDAD LTS"],["price","PU"],["net","NETO FACTURADO"]] as const){if(typeof r[k]!=="number"||!Number.isFinite(r[k])||r[k]<=0)e.push(label+" debe ser un número positivo");}return e;}
-export function payload(r:SourceRow){const errors=validate(r);if(errors.length)throw new Error(errors.join("; "));return {IdentificacionExterna:identifier(r),Fecha:r.date,Proveedor:r.sap,TransaccionTipo:"OPER",TransaccionSubtipoCodigo:"YPF-R",Workflow:"Fletes",Descripcion:"TARJETA "+r.card+" PATENTE "+r.plate,NumeroComprobante:r.invoice,EmpresaCodigo:"049CDS",Items:[{ProductoCodigo:"62",CantidadWorkflow:round(r.quantity,6),Precio:-round(r.price,6),DimensionDistribucion:[["DIMCTC","1160"],["SUCDES","014CDS"]].map(([dimensionCodigo,codigo])=>({dimensionCodigo,distribucionCodigo:"",tipoCalculo:"2",distribucionItems:[{codigo,porcentaje:100,importe:round(r.net,4)}]}))}]};}
+
+export function identifier(r:SourceRow){
+  const time=r.time.replaceAll(":","");
+  const liters=String(round(r.quantity,6)).replace(".","-");
+  return r.date+"_"+time+"_"+r.card+"_PATENTE"+r.plate+"_LTS"+liters+"_"+r.sourceHash;
+}
+
+export function validate(r:SourceRow){
+  const errors:string[]=[];
+  if(!r||typeof r!=="object")return ["Fila inválida"];
+  if(!Number.isInteger(r.row)||r.row<2)errors.push("Fila inválida");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date)||!Number.isFinite(Date.parse(r.date))||new Date(r.date).toISOString().slice(0,10)!==r.date)errors.push("Fecha inválida");
+  if(!/^\d{2}:\d{2}:\d{2}$/.test(r.time)){
+    errors.push("Hora inválida");
+  }else{
+    const [hour,minute,second]=r.time.split(":").map(Number);
+    if(hour>23||minute>59||second>59)errors.push("Hora inválida");
+  }
+  if(!/^[0-9a-f]{16}$/.test(r.sourceHash))errors.push("Identificación de origen inválida");
+  for(const [key,label]of [["card","TARJETA"],["plate","PATENTE"],["sap","N° SAP"],["invoice","NRO.FACTURA"]] as const){
+    if(typeof r[key]!=="string"||!r[key].trim()||r[key].length>120)errors.push(label+" requerido o inválido");
+  }
+  if(!/^\d+$/.test(r.card))errors.push("La tarjeta debe conservarse como texto numérico");
+  for(const [key,label]of [["quantity","CANTIDAD LTS"],["price","PU"],["net","NETO FACTURADO"]] as const){
+    if(typeof r[key]!=="number"||!Number.isFinite(r[key])||r[key]<=0)errors.push(label+" debe ser un número positivo");
+  }
+  return errors;
+}
+
+export function payload(r:SourceRow){
+  const errors=validate(r);
+  if(errors.length)throw new Error(errors.join("; "));
+  return {
+    IdentificacionExterna:identifier(r),
+    Fecha:r.date,
+    Proveedor:r.sap,
+    TransaccionTipo:"OPER",
+    TransaccionSubtipoCodigo:"YPF-R",
+    Workflow:"Fletes",
+    Descripcion:"TARJETA "+r.card+" PATENTE "+r.plate,
+    NumeroComprobante:r.invoice,
+    EmpresaCodigo:"049CDS",
+    Items:[{
+      ProductoCodigo:"62",
+      CantidadWorkflow:round(r.quantity,6),
+      Precio:-round(r.price,6),
+      DimensionDistribucion:[["DIMCTC","1160"],["SUCDES","014CDS"]].map(([dimensionCodigo,codigo])=>({
+        dimensionCodigo,
+        distribucionCodigo:"",
+        tipoCalculo:"2",
+        distribucionItems:[{codigo,porcentaje:100,importe:round(r.net,4)}],
+      })),
+    }],
+  };
+}
