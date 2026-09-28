@@ -58,6 +58,7 @@ export function payload(r:SourceRow){
     Descripcion:"TARJETA "+r.card+" PATENTE "+r.plate,
     NumeroComprobante:r.invoice,
     EmpresaCodigo:"049CDS",
+    OperacionCondicionesPago:"0-0",
     Items:[{
       ProductoCodigo:"62",
       CantidadWorkflow:round(r.quantity,6),

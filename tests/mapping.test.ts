@@ -20,6 +20,7 @@ assert.equal(firstPayload.Items[0].CantidadWorkflow,30.11);
 assert.equal(firstPayload.Items[0].Precio,-1457.237747);
 assert.equal(firstPayload.Items[0].DimensionDistribucion[0].distribucionItems[0].importe,43877.4286);
 assert.equal(firstPayload.NumeroComprobante,"F1420A00275738");
+assert.equal(firstPayload.OperacionCondicionesPago,"0-0");
 assert.equal(firstPayload.Items[0].ProductoCodigo,"62");
 assert(validate({...rows[0],date:"2026-02-30"}).length);
 assert(validate({...rows[0],time:"27:00:00"}).length);

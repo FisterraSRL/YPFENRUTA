@@ -26,6 +26,7 @@ globalThis.fetch=async(input,init)=>{
   calls++;
   assert.equal(init?.method,"POST");
   const data=JSON.parse(String(init?.body));
+  assert.equal(data.OperacionCondicionesPago,"0-0");
   assert.equal(data.Items[0].Precio,-1457.24);
   if(mode==="timeout")throw new Error("timeout");
   return Response.json(mode==="error"?{error:"Rejected"}:{TransaccionID:123});
