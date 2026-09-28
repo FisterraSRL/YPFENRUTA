@@ -14,6 +14,7 @@ assert.match(rows[0].sourceHash,/^[0-9a-f]{16}$/);
 
 const firstPayload=payload(rows[0]);
 assert.equal(firstPayload.Fecha,"2026-08-11");
+assert.equal(firstPayload.FechaBaseVencimiento,firstPayload.Fecha);
 assert.equal(firstPayload.Proveedor,"152467");
 assert.match(firstPayload.IdentificacionExterna,/^2026-08-11_\d{6}_70841431002613811_PATENTEAE664ED_LTS30-11_[0-9a-f]{16}$/);
 assert.equal(firstPayload.Items[0].CantidadWorkflow,30.11);

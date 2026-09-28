@@ -51,6 +51,7 @@ export function payload(r:SourceRow){
   return {
     IdentificacionExterna:identifier(r),
     Fecha:r.date,
+    FechaBaseVencimiento:r.date,
     Proveedor:r.sap,
     TransaccionTipo:"OPER",
     TransaccionSubtipoCodigo:"YPF-R",
