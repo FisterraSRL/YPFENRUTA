@@ -1,5 +1,5 @@
 import {env} from "cloudflare:workers";
-export function config(){return env as unknown as {DB:D1Database;FINNEGANS_CLIENT_ID?:string;FINNEGANS_CLIENT_SECRET?:string};}
+export function config(){return env as unknown as {FINNEGANS_CLIENT_ID?:string;FINNEGANS_CLIENT_SECRET?:string};}
 export const json=(value:unknown,status=200)=>Response.json(value,{status,headers:{"Cache-Control":"no-store"}});
 export function checkOrigin(req:Request){return req.headers.get("origin")===new URL(req.url).origin&&req.headers.get("x-ypf-action")==="reviewed";}
 let cached:{value:string;expires:number}|undefined;

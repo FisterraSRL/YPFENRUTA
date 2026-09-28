@@ -1,1 +1,6 @@
-import {checkOrigin,config,json} from "@/lib/server";import {isRetryableRejection} from "@/lib/send-status";export async function POST(req:Request){if(!checkOrigin(req))return json({error:"Origen no permitido."},403);try{const {ids}=await req.json() as {ids:unknown};if(!Array.isArray(ids)||ids.length>10000||ids.some(x=>typeof x!=="string"||x.length>400))return json({error:"Identificaciones inválidas."},400);const results:Record<string,{status:string;message:string}>={};for(let i=0;i<ids.length;i+=80){const part=ids.slice(i,i+80);const found=await config().DB.prepare("SELECT id,status,message FROM receipts WHERE id IN ("+part.map(()=>"?").join(",")+")").bind(...part).all<{id:string;status:string;message:string}>();found.results.forEach(r=>{if(!isRetryableRejection(r))results[r.id]={status:r.status,message:r.message};});}return json({results});}catch{return json({error:"No se pudo verificar el registro de envíos."},503);}}
+import {checkOrigin,json} from "@/lib/server";
+
+export async function POST(req:Request){
+  if(!checkOrigin(req))return json({error:"Origen no permitido."},403);
+  return json({results:{}});
+}

@@ -1,7 +1,6 @@
-import {checkOrigin,config,json,token} from "@/lib/server";
+import {checkOrigin,json,token} from "@/lib/server";
 import {payload,type SourceRow} from "@/lib/receipts";
 import {apiResponseMessage} from "@/lib/api-response";
-import {isRetryableRejection} from "@/lib/send-status";
 
 export async function POST(req:Request){
   if(!checkOrigin(req))return json({error:"Origen no permitido."},403);
@@ -19,24 +18,6 @@ export async function POST(req:Request){
     accessToken=await token();
   }catch(error){
     return json({error:error instanceof Error?error.message:"No se pudo autenticar."},503);
-  }
-
-  const db=config().DB;
-  const startedAt=new Date().toISOString();
-  let claimed;
-  try{
-    claimed=await db.prepare("INSERT INTO receipts (id,status,created_at,message) VALUES (?, 'pending', ?, ?) ON CONFLICT(id) DO NOTHING")
-      .bind(p.IdentificacionExterna,startedAt,"Envío iniciado. Verificar en Finnegans antes de repetir.").run();
-  }catch{
-    return json({error:"No se pudo registrar el envío. No se envió la recepción."},503);
-  }
-
-  if(!claimed.meta.changes){
-    const previous=await db.prepare("SELECT status,message FROM receipts WHERE id=?").bind(p.IdentificacionExterna).first<{status:string;message:string}>();
-    if(!isRetryableRejection(previous))return json({duplicate:true,...previous},409);
-    const reclaimed=await db.prepare("UPDATE receipts SET status='pending',created_at=?,message=? WHERE id=? AND (status='failed' OR (status='uncertain' AND message LIKE 'Respuesta API (HTTP %'))")
-      .bind(startedAt,"Reintento de un rechazo anterior iniciado.",p.IdentificacionExterna).run();
-    if(!reclaimed.meta.changes)return json({duplicate:true,...previous},409);
   }
 
   let status="uncertain";
@@ -61,10 +42,5 @@ export async function POST(req:Request){
     message="Error de red al llamar a recepcionCompraCDS: "+(detail||"sin detalle");
   }
 
-  try{
-    await db.prepare("UPDATE receipts SET status=?,message=? WHERE id=?").bind(status,message,p.IdentificacionExterna).run();
-  }catch{
-    return json({status:"uncertain",message:"Se intentó el envío, pero no se pudo guardar el resultado. Verificá en Finnegans."},502);
-  }
   return json({status,message},status==="sent"?200:502);
 }
