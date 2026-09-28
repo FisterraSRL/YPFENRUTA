@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {POST} from "../app/api/send/route";
+process.env.FINNEGANS_CLIENT_ID="test-client";
+process.env.FINNEGANS_CLIENT_SECRET="test-secret";
 
 const row={
   row:2,
