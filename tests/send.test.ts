@@ -23,10 +23,12 @@ let mode="ok";
 globalThis.fetch=async(input,init)=>{
   const url=new URL(String(input));
   if(url.pathname.includes("oauth"))return new Response("test-token-123456789");
+  assert.equal(url.pathname,"/api/recepcionCompraCDS");
   calls++;
   assert.equal(init?.method,"POST");
   const data=JSON.parse(String(init?.body));
-  assert.equal(data.OperacionCondicionesPago,"0-0");
+  assert.equal(data.CondicionPagoCodigo,"15");
+  assert.equal("OperacionCondicionesPago" in data,false);
   assert.equal(data.Items[0].Precio,-1457.24);
   if(mode==="timeout")throw new Error("timeout");
   return Response.json(mode==="error"?{error:"Rejected"}:{TransaccionID:123});

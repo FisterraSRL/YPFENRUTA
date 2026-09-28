@@ -42,7 +42,7 @@ export async function POST(req:Request){
   let status="uncertain";
   let message="Resultado incierto. Verificá en Finnegans antes de volver a cargar esta recepción.";
   try{
-    const url="https://api.finneg.com/api/recepcionCompra?ACCESS_TOKEN="+encodeURIComponent(accessToken);
+    const url="https://api.finneg.com/api/recepcionCompraCDS?ACCESS_TOKEN="+encodeURIComponent(accessToken);
     const response=await fetch(url,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -58,7 +58,7 @@ export async function POST(req:Request){
     status=response.ok&&!businessError&&!html?"sent":"failed";
   }catch(error){
     const detail=error instanceof Error?error.message:String(error);
-    message="Error de red al llamar a recepcionCompra: "+(detail||"sin detalle");
+    message="Error de red al llamar a recepcionCompraCDS: "+(detail||"sin detalle");
   }
 
   try{
