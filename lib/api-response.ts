@@ -46,5 +46,5 @@ export function apiResponseMessage(status: number, body: unknown, raw: string): 
 
   if (!detail) detail = raw.trim() || "La API no devolvió contenido.";
   const clean = detail.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  return ("Respuesta API (HTTP " + status + "): " + clean).slice(0, 2000);
+  return ("Respuesta API (HTTP " + status + "): " + clean).slice(0, 8000);
 }
