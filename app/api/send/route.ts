@@ -1,6 +1,7 @@
 import {checkOrigin,config,json,token} from "@/lib/server";
 import {payload,type SourceRow} from "@/lib/receipts";
 import {apiResponseMessage} from "@/lib/api-response";
+import {isRetryableRejection} from "@/lib/send-status";
 
 export async function POST(req:Request){
   if(!checkOrigin(req))return json({error:"Origen no permitido."},403);
@@ -32,7 +33,10 @@ export async function POST(req:Request){
 
   if(!claimed.meta.changes){
     const previous=await db.prepare("SELECT status,message FROM receipts WHERE id=?").bind(p.IdentificacionExterna).first<{status:string;message:string}>();
-    return json({duplicate:true,...previous},409);
+    if(!isRetryableRejection(previous))return json({duplicate:true,...previous},409);
+    const reclaimed=await db.prepare("UPDATE receipts SET status='pending',created_at=?,message=? WHERE id=? AND (status='failed' OR (status='uncertain' AND message LIKE 'Respuesta API (HTTP %'))")
+      .bind(startedAt,"Reintento de un rechazo anterior iniciado.",p.IdentificacionExterna).run();
+    if(!reclaimed.meta.changes)return json({duplicate:true,...previous},409);
   }
 
   let status="uncertain";
@@ -51,7 +55,7 @@ export async function POST(req:Request){
     const businessError=record.error||record.Error||record.errors||record.Errores||record.success===false||record.Success===false;
     const html=typeof body==="string"&&/^\s*</.test(body);
     message=apiResponseMessage(response.status,body,raw);
-    if(response.ok&&!businessError&&!html)status="sent";
+    status=response.ok&&!businessError&&!html?"sent":"failed";
   }catch(error){
     const detail=error instanceof Error?error.message:String(error);
     message="Error de red al llamar a recepcionCompra: "+(detail||"sin detalle");
