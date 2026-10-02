@@ -16,7 +16,7 @@ const row={
   price:1457.24,
   net:43877.5,
   product:"NAFTA",
-  errors:[],
+  sucdes:"014CDS",errors:[],
 };
 let calls=0;
 let mode="ok";

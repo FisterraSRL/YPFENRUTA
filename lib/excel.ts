@@ -84,9 +84,10 @@ export async function readExcel(data:ArrayBuffer){
     net:"NETOFACTURADO",
     product:"PRODUCTO",
     businessName:"RAZONSOCIAL",
+    branch:"SUCURSAL",
   };
   for(const [key,heading]of Object.entries(map)){
-    if(!columns[heading]&&key!=="product"&&key!=="businessName")throw new Error("Falta la columna "+heading+" en FINAL.");
+    if(!columns[heading]&&key!=="product"&&key!=="businessName"&&key!=="branch")throw new Error("Falta la columna "+heading+" en FINAL.");
   }
 
   const rows:SourceRow[]=[];
@@ -111,6 +112,7 @@ export async function readExcel(data:ArrayBuffer){
       net:num(get("net")),
       product:txt(get("product")),
       businessName:txt(get("businessName")),
+      branch:txt(get("branch")),
       errors:[],
     };
     receipt.errors=validate(receipt);

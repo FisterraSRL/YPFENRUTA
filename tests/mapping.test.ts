@@ -12,7 +12,7 @@ assert.equal(rows[0].businessName,"OBREQUE URRUTIA JOSE EDUARDO");
 assert.match(rows[0].time,/^\d{2}:\d{2}:\d{2}$/);
 assert.match(rows[0].sourceHash,/^[0-9a-f]{16}$/);
 
-const firstPayload=payload(rows[0]);
+const firstPayload=payload({...rows[0],sucdes:"014CDS"});
 assert.equal(firstPayload.Fecha,"2026-08-11");
 assert.equal(firstPayload.FechaBaseVencimiento,firstPayload.Fecha);
 assert.equal(firstPayload.Proveedor,"152467");
@@ -27,7 +27,8 @@ assert.equal(firstPayload.Items[0].ProductoCodigo,"62");
 assert(validate({...rows[0],date:"2026-02-30"}).length);
 assert(validate({...rows[0],time:"27:00:00"}).length);
 assert(validate({...rows[0],quantity:NaN}).length);
-assert.throws(()=>payload({...rows[0],sap:""}));
+assert.throws(()=>payload({...rows[0],sucdes:"014CDS",sap:""}));
+assert.throws(()=>payload(rows[0]),/SUCDES/);
 
 const workbook=new ExcelJS.Workbook();
 const sheet=workbook.addWorksheet("FINAL");

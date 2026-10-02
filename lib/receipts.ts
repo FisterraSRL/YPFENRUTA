@@ -12,6 +12,9 @@ export type SourceRow={
   net:number;
   product:string;
   businessName?:string;
+  branch?:string;
+  sucdes?:string;
+  empresa?:string;
   errors:string[];
 };
 
@@ -45,8 +48,13 @@ export function validate(r:SourceRow){
   return errors;
 }
 
+export const DEFAULT_EMPRESA="049CDS";
+export const validSucdes=(code:unknown):code is string=>typeof code==="string"&&/^[A-Z0-9]{1,20}$/.test(code);
+
 export function payload(r:SourceRow){
   const errors=validate(r);
+  if(!validSucdes(r.sucdes))errors.push("Sucursal (SUCDES) sin seleccionar");
+  if(r.empresa!==undefined&&!validSucdes(r.empresa))errors.push("Empresa inválida");
   if(errors.length)throw new Error(errors.join("; "));
   return {
     IdentificacionExterna:identifier(r),
@@ -58,13 +66,13 @@ export function payload(r:SourceRow){
     Workflow:"Fletes",
     Descripcion:"TARJETA "+r.card+" PATENTE "+r.plate,
     NumeroComprobante:r.invoice,
-    EmpresaCodigo:"049CDS",
+    EmpresaCodigo:r.empresa??DEFAULT_EMPRESA,
     CondicionPagoCodigo:"15",
     Items:[{
       ProductoCodigo:"62",
       CantidadWorkflow:round(r.quantity,6),
       Precio:-round(r.price,6),
-      DimensionDistribucion:[["DIMCTC","1160"],["SUCDES","014CDS"]].map(([dimensionCodigo,codigo])=>({
+      DimensionDistribucion:[["DIMCTC","1160"],["SUCDES",r.sucdes]].map(([dimensionCodigo,codigo])=>({
         dimensionCodigo,
         distribucionCodigo:"",
         tipoCalculo:"2",
